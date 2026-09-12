@@ -148,4 +148,8 @@ class DatabaseService {
       }
     }
   }
+  Future<void> borrarTodasLasNotas() async {
+  final db = await database;
+  await db.delete('notas');
+}
 }

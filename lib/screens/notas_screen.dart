@@ -88,6 +88,7 @@ class _NotasScreenState extends State<NotasScreen> {
   }
 
   Future<void> cerrarSesion() async {
+    await DatabaseService.instance.borrarTodasLasNotas();
     await ApiService.cerrarSesion();
 
     if (!mounted) return;
