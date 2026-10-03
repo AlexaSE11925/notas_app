@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../services/api_service.dart';
-import 'notas_screen.dart';
+import '../providers/auth_provider.dart';
 import 'registro_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,36 +12,33 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final correoController = TextEditingController();
-  final passwordController = TextEditingController();
+  final TextEditingController correoController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   bool cargando = false;
 
   Future<void> iniciarSesion() async {
-    if (correoController.text.trim().isEmpty ||
-        passwordController.text.trim().isEmpty) {
+    final correo = correoController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (correo.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completa todos los campos')),
+        const SnackBar(
+          content: Text('Debes ingresar correo y contraseña'),
+        ),
       );
       return;
     }
 
-    setState(() => cargando = true);
+    setState(() {
+      cargando = true;
+    });
 
     try {
-      await ApiService.login(
-        correoController.text.trim(),
-        passwordController.text.trim(),
-      );
-
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const NotasScreen(),
-        ),
-      );
+      await context.read<AuthProvider>().iniciarSesion(
+            correo,
+            password,
+          );
     } catch (e) {
       if (!mounted) return;
 
@@ -54,79 +51,104 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } finally {
       if (mounted) {
-        setState(() => cargando = false);
+        setState(() {
+          cargando = false;
+        });
       }
     }
+  }
+
+  @override
+  void dispose() {
+    correoController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.note_alt_outlined,
-                size: 90,
-                color: Colors.indigo,
-              ),
-              const SizedBox(height: 15),
-              const Text(
-                'Mis Notas',
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 20,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.edit_note,
+                  size: 80,
+                  color: Colors.indigo,
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Inicia sesión para consultar tus notas',
-              ),
-              const SizedBox(height: 35),
-              TextField(
-                controller: correoController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Correo electrónico',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+                const SizedBox(height: 16),
+                const Text(
+                  'Mis Notas',
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Contraseña',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                const SizedBox(height: 8),
+                const Text(
+                  'Inicia sesión para consultar tus notas',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 25),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: cargando ? null : iniciarSesion,
-                  child: cargando
-                      ? const CircularProgressIndicator()
-                      : const Text('Iniciar sesión'),
+                const SizedBox(height: 32),
+                TextField(
+                  controller: correoController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Correo electrónico',
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const RegistroScreen(),
-                    ),
-                  );
-                },
-                child: const Text('Crear una cuenta'),
-              ),
-            ],
+                const SizedBox(height: 16),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Contraseña',
+                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: cargando ? null : iniciarSesion,
+                    child: cargando
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text('Iniciar sesión'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RegistroScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('Crear una cuenta'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

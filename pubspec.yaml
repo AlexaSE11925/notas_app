@@ -39,6 +39,8 @@ dependencies:
   path: ^1.9.1
   connectivity_plus: ^7.3.1
   flutter_secure_storage: ^11.1.1
+  provider: ^6.1.5+1
+  geolocator: ^14.0.1
 
 dev_dependencies:
   flutter_test:
